@@ -1,0 +1,704 @@
+{
+  "name": "EmailFlow - MVP",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "maxResults": 10,
+        "filters": {
+          "q": "subject:\"EMAILFLOW TEST\" from:teste@example.com -label:EmailFlow-Respondido"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "name": "Gmail Trigger",
+      "id": "ef000000-0000-4000-8000-000000000001"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SUBSTITUA_PELO_ID_DA_PLANILHA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Contatos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_email": "={{ $('Processar uma mensagem').item.json.id }}",
+            "data_recebimento": "={{ DateTime.fromMillis(Number($('Processar uma mensagem').item.json.internalDate)).setZone('America/Fortaleza').toFormat('dd/MM/yyyy HH:mm:ss') }}",
+            "remetente": "={{ $('Processar uma mensagem').item.json.From }}",
+            "destinatario": "={{ $('Processar uma mensagem').item.json.To }}",
+            "assunto": "={{ $('Processar uma mensagem').item.json.Subject }}",
+            "resumo": "={{ $('Processar uma mensagem').item.json.snippet }}",
+            "status": "Envio pendente"
+          },
+          "matchingColumns": [
+            "id_email"
+          ],
+          "schema": [
+            {
+              "id": "id_email",
+              "displayName": "id_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_recebimento",
+              "displayName": "data_recebimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remetente",
+              "displayName": "remetente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario",
+              "displayName": "destinatario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assunto",
+              "displayName": "assunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resumo",
+              "displayName": "resumo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "id_resposta",
+              "displayName": "id_resposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1360,
+        -270
+      ],
+      "name": "Append or update row in sheet",
+      "onError": "continueErrorOutput",
+      "id": "ef000000-0000-4000-8000-000000000002"
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $json.id_email }}",
+        "message": " <div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333333; line-height: 1.6;\">    <p style=\"margin: 0 0 16px;\">     Olá!   </p>    <p style=\"margin: 0 0 16px;\">     Recebemos sua mensagem e agradecemos pelo contato.   </p>    <p style=\"margin: 0 0 16px;\">     Sua solicitação foi <strong>registrada com sucesso</strong>.     Nossa equipe analisará as informações e retornará     assim que possível.   </p>    <p style=\"margin: 24px 0 0;\">     Atenciosamente,<br>     <strong>Equipe de Atendimento</strong>   </p>    <p style=\"margin: 24px 0 0; font-size: 12px; color: #777777;\">     <em>Esta é uma resposta automática. Por favor, não responda a esta mensagem.</em>   </p>  </div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1580,
+        -270
+      ],
+      "name": "Reply to a message",
+      "onError": "continueErrorOutput",
+      "retryOnFail": false,
+      "id": "ef000000-0000-4000-8000-000000000003"
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.id_email }}",
+        "labelIds": [
+          "SUBSTITUA_PELO_ID_DO_ROTULO"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2020,
+        -128
+      ],
+      "name": "Add label to message",
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "id": "ef000000-0000-4000-8000-000000000004"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "4356cad2-d393-43fd-9443-7a5298f6e0ab",
+              "leftValue": "={{ ($json.labels ?? []).some(label => label.id === \"SUBSTITUA_PELO_ID_DO_ROTULO\") ? 'respondido' : 'pendente' }}",
+              "rightValue": "pendente",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        490,
+        0
+      ],
+      "name": "If",
+      "id": "ef000000-0000-4000-8000-000000000005"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SUBSTITUA_PELO_ID_DA_PLANILHA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Contatos"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "Respondido",
+            "id_email": "={{ $('Processar uma mensagem').item.json.id }}",
+            "id_resposta": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "id_email"
+          ],
+          "schema": [
+            {
+              "id": "id_email",
+              "displayName": "id_email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "data_recebimento",
+              "displayName": "data_recebimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "remetente",
+              "displayName": "remetente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "destinatario",
+              "displayName": "destinatario",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assunto",
+              "displayName": "assunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "resumo",
+              "displayName": "resumo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "id_resposta",
+              "displayName": "id_resposta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1800,
+        -270
+      ],
+      "name": "Update row in sheet",
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "id": "ef000000-0000-4000-8000-000000000006"
+    },
+    {
+      "name": "Buscar registro pelo ID",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        920,
+        -128
+      ],
+      "parameters": {
+        "resource": "sheet",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SUBSTITUA_PELO_ID_DA_PLANILHA"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "Contatos"
+        },
+        "operation": "read",
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id_email",
+              "lookupValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "id": "ef000000-0000-4000-8000-000000000007"
+    },
+    {
+      "name": "Registro inexistente?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1140,
+        -128
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ Object.keys($json).length ? 'existente' : 'novo' }}",
+              "rightValue": "novo",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ef000000-0000-4000-8000-000000000008"
+    },
+    {
+      "name": "Envio confirmado?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1360,
+        90
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ ($json.id_email && ($json.id_resposta || $json.status === 'Respondido')) ? 'confirmado' : 'pendente' }}",
+              "rightValue": "confirmado",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ef000000-0000-4000-8000-000000000009"
+    },
+    {
+      "name": "Processar uma mensagem",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        230,
+        0
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "ef000000-0000-4000-8000-000000000010"
+    },
+    {
+      "name": "Registrar falha da mensagem",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1740,
+        300
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "emailflow_id",
+              "name": "emailflow_id",
+              "value": "={{ $(\"Processar uma mensagem\").item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "emailflow_etapa",
+              "name": "emailflow_etapa",
+              "value": "={{ $prevNode.name === 'Envio confirmado?' ? ($json.id_email ? 'Revisar envio pendente' : 'Buscar registro pelo ID') : $prevNode.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ef000000-0000-4000-8000-000000000011"
+    },
+    {
+      "name": "Sinalizar falhas do lote",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        550,
+        -385
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const items = $input.all();\nconst failures = items.map(({ json }) => json).filter((item) => item.emailflow_etapa);\nif (failures.length > 0) {\n  const details = failures\n    .map((item) => item.emailflow_etapa + ' | ID do e-mail: ' + item.emailflow_id)\n    .join('\\n');\n  throw new Error('EmailFlow: ' + failures.length + ' falha(s) no lote.\\n' + details);\n}\nreturn [{ json: { mensagens_processadas: items.length } }];"
+      },
+      "id": "ef000000-0000-4000-8000-000000000012"
+    }
+  ],
+  "connections": {
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Reply to a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar falha da mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Buscar registro pelo ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Processar uma mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar registro pelo ID": {
+      "main": [
+        [
+          {
+            "node": "Registro inexistente?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registro inexistente?": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Envio confirmado?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply to a message": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar falha da mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar falha da mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envio confirmado?": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar falha da mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Processar uma mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processar uma mensagem": {
+      "main": [
+        [
+          {
+            "node": "Sinalizar falhas do lote",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label to message": {
+      "main": [
+        [
+          {
+            "node": "Processar uma mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Registrar falha da mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar falha da mensagem": {
+      "main": [
+        [
+          {
+            "node": "Processar uma mensagem",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "pinData": {},
+  "nodeGroups": [
+    {
+      "name": "Processar mensagens do lote",
+      "nodeNames": [
+        "Processar uma mensagem",
+        "Registrar falha da mensagem",
+        "Append or update row in sheet",
+        "Reply to a message",
+        "Add label to message",
+        "If",
+        "Update row in sheet",
+        "Buscar registro pelo ID",
+        "Registro inexistente?",
+        "Envio confirmado?"
+      ],
+      "description": "Isola cada mensagem e devolve o resultado ao loop antes de seguir para a próxima.",
+      "id": "ef000000-0000-4000-8001-000000000001"
+    }
+  ]
+}

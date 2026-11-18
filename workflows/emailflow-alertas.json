@@ -1,0 +1,55 @@
+{
+  "name": "EmailFlow - Alertas",
+  "active": false,
+  "nodes": [
+    {
+      "name": "Capturar falha",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {},
+      "id": "ef000001-0000-4000-8000-000000000001"
+    },
+    {
+      "name": "Enviar alerta por Gmail",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "alertas@example.com",
+        "subject": "[n8n] Falha no EmailFlow",
+        "emailType": "text",
+        "message": "={{ ['Workflow: ' + ($json.workflow?.name ?? 'EmailFlow'), 'Etapa: ' + ($json.execution?.lastNodeExecuted ?? $json.trigger?.error?.node?.name ?? 'Gatilho'), 'Execução: ' + ($json.execution?.url ?? $json.execution?.id ?? 'indisponível'), ($json.execution?.error?.message ?? '').startsWith('EmailFlow:') ? $json.execution.error.message : 'Consulte o histórico do n8n para ver os detalhes.'].join('\\n') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "ef000001-0000-4000-8000-000000000002"
+    }
+  ],
+  "connections": {
+    "Capturar falha": {
+      "main": [
+        [
+          {
+            "node": "Enviar alerta por Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}
