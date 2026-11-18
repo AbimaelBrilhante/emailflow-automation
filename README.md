@@ -22,22 +22,29 @@ flowchart TD
 - `workflows/emailflow-alertas.json` contém a notificação de falhas de produção.
 - `examples/contatos.csv` contém apenas os cabeçalhos esperados pela planilha.
 
-## Configuração
+## Checklist de instalação
 
-1. Importe os dois arquivos JSON no n8n. O projeto foi preparado a partir do n8n 2.45.6.
-2. Crie suas credenciais OAuth2 de Gmail e Google Sheets e selecione-as nos respectivos nós.
-3. Crie uma planilha com uma aba chamada `Contatos` e importe os cabeçalhos do CSV. Selecione sua planilha e aba nos três nós de Google Sheets.
-4. No Gmail, crie o rótulo `EmailFlow-Respondido`. Selecione-o em **Add label to message** e use o mesmo ID no nó **If**, no lugar de `SUBSTITUA_PELO_ID_DO_ROTULO`.
-5. No gatilho, substitua `teste@example.com` por um remetente de teste. No workflow de alertas, troque `alertas@example.com` pelo endereço que vai receber as notificações.
-6. Publique o workflow de alertas e selecione-o como **Error workflow** nas configurações do fluxo principal. Teste com uma caixa dedicada e um assunto controlado antes de publicar o fluxo principal.
+- [ ] Clone ou baixe este repositório e abra uma instância do n8n. Os workflows foram exportados do n8n 2.45.6.
+- [ ] No editor n8n, use **Import from File** para importar `workflows/emailflow-mvp.json` e `workflows/emailflow-alertas.json`. Mantenha o fluxo principal inativo durante a configuração.
+- [ ] Crie no n8n as credenciais **Gmail OAuth2** e **Google Sheets OAuth2**. Em uma instância própria, habilite as APIs Gmail, Google Sheets e Google Drive no projeto Google Cloud, configure o consentimento OAuth e crie um cliente do tipo **Web application**. Cadastre a **OAuth Redirect URL** exibida pelo n8n, informe o **Client ID** e o **Client Secret** na credencial e autorize a conta Google. Se o aplicativo estiver em modo **Testing**, inclua a conta como usuária de teste. [Configuração OAuth2 do Google no n8n](https://docs.n8n.io/integrations/builtin/credentials/google/oauth-single-service/)
+- [ ] No workflow principal, selecione a credencial Gmail em **Gmail Trigger**, **Reply to a message** e **Add label to message**. No workflow de alertas, selecione a credencial Gmail em **Enviar alerta por Gmail**.
+- [ ] Crie uma planilha com uma aba chamada `Contatos` e importe a linha de cabeçalhos de `examples/contatos.csv`. Nos nós **Buscar registro pelo ID**, **Append or update row in sheet** e **Update row in sheet**, selecione a credencial do Sheets, a planilha e a aba.
+- [ ] Na caixa Gmail conectada, crie o rótulo `EmailFlow-Respondido` e selecione-o em **Add label to message**. Copie o ID do rótulo do parâmetro `labelIds` desse nó no JSON do workflow e use-o na condição do nó **If**, no lugar de `SUBSTITUA_PELO_ID_DO_ROTULO`.
+- [ ] Em **Gmail Trigger**, substitua `teste@example.com` pelo remetente autorizado para o teste. Em **Enviar alerta por Gmail**, substitua `alertas@example.com` pelo destinatário das notificações.
+- [ ] Publique **EmailFlow - Alertas** e selecione-o como **Error workflow** nas configurações do workflow principal.
+- [ ] Envie uma mensagem nova do remetente autorizado com o assunto `EMAILFLOW TEST` e faça uma execução manual completa do fluxo principal. Confirme que houve uma única resposta, que o rótulo foi aplicado e que a linha ficou com `Respondido` e `id_resposta`.
+- [ ] Publique o workflow principal quando a validação terminar. Os alertas automáticos são disparados por falhas de produção. [Tratamento de erros no n8n](https://docs.n8n.io/flow-logic/error-handling/)
 
-## Como validar
+## Alterar o assunto ou o remetente do filtro
 
-- Mensagem nova: recebe uma resposta, o Sheets registra `Respondido` e `id_resposta`, e o Gmail recebe o rótulo.
-- Mensagem já respondida: um reprocessamento com confirmação registrada pode concluir a rotulagem sem enviar de novo.
-- Envio incerto: a mensagem fica pendente de conciliação manual. As demais mensagens do lote continuam.
-- Uma falha em produção deve aparecer no histórico e acionar o workflow de alertas. Use uma conta de teste para exercitar esse cenário.
+No editor, abra **Gmail Trigger → Filters → Search** e edite a busca Gmail. `subject:"NOVO CONTATO"` procura a frase no assunto. `from:teste@example.com` restringe o remetente e `-label:EmailFlow-Respondido` exclui mensagens já rotuladas.
+
+Para editar o arquivo antes de importar, localize o nó **Gmail Trigger** em `workflows/emailflow-mvp.json` e mude `parameters.filters.q`.
+
+```json
+"q": "subject:\"NOVO CONTATO\" from:teste@example.com -label:EmailFlow-Respondido"
+```
+
+Se o workflow já estiver instalado, faça a alteração no editor e publique a nova versão para aplicá-la em produção.
 
 A consulta e a gravação no Sheets são operações separadas. Execuções simultâneas podem disputar a mesma mensagem. O alerta também depende da credencial Gmail configurada.
-
-[Documentação de tratamento de erros do n8n](https://docs.n8n.io/flow-logic/error-handling/)
